@@ -1,30 +1,32 @@
 import streamlit as st
-from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
+import joblib
 
-# Load the trained model (make sure it's in the same folder as the app)
-model = load_model('model.h5')
+# Load pre-trained models
+rf_model = joblib.load('brain_tumor_rf_model.pkl')
+pca = joblib.load('pca_model.pkl')
+scaler = joblib.load('scaler_model.pkl')
 
-st.title("Image Classification: Healthy vs Humor")
+st.title("Brain Tumor Classification")
 
-# File uploader widget to upload images
+# File uploader for image input
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-    st.write("")
+    img = Image.open(uploaded_file).convert('RGB')
+    st.image(img, caption="Uploaded Image", use_column_width=True)
     st.write("Classifying...")
 
-    # Preprocess the image before prediction
-    image = image.resize((150, 150))
-    image = np.array(image) / 255.0  # Rescale pixel values
-    image = np.expand_dims(image, axis=0)  # Add batch dimension
+    # Preprocess the image
+    img = img.resize((64, 64))
+    img_array = np.array(img).flatten().reshape(1, -1)
 
-    # Make the prediction
-    prediction = model.predict(image)
-    if prediction[0] > 0.5:
-        st.write("Prediction: Humor")
-    else:
-        st.write("Prediction: Healthy")
+    # Standardize and apply PCA
+    img_scaled = scaler.transform(img_array)
+    img_pca = pca.transform(img_scaled)
+
+    # Predict the class
+    prediction = rf_model.predict(img_pca)
+    result = "Tumor" if prediction == 1 else "Healthy"
+    st.write(f"Prediction: {result}")
