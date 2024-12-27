@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import joblib
 
-# Load pre-trained models (use joblib instead of Keras' load_model)
+# Load pre-trained models using joblib
 rf_model = joblib.load('brain_tumor_rf_model.pkl')  # Load RandomForest model
 pca = joblib.load('pca_model.pkl')  # Load PCA model
 scaler = joblib.load('scaler_model.pkl')  # Load Scaler
